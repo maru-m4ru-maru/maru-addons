@@ -1,5 +1,5 @@
 (() => {
-  const MARU_ADDONS_VERSION = "1.4.4";
+  const MARU_ADDONS_VERSION = "1.4.5";
 
   if (window.__MARU_ADDONS_LOADED__) {
     console.log("[Maru] まる Addons はすでに読み込まれています");
@@ -55,7 +55,7 @@
         box-shadow: 0 4px 14px rgba(0,0,0,.25);
         user-select: none;
         pointer-events: none;
-        min-width: 145px;
+        min-width: 130px;
       }
 
       #${PANEL_ID} .maru-title {
@@ -293,21 +293,6 @@
         el.textContent =
           `Scratch FPS: ${scratchFPS}`;
       }
-
-      const panel =
-        document.getElementById(PANEL_ID);
-
-      if (panel) {
-        const panelFPS =
-          panel.querySelector(
-            "#maru-panel-scratch-fps"
-          );
-
-        if (panelFPS) {
-          panelFPS.textContent =
-            String(scratchFPS);
-        }
-      }
     }, 500);
   }
 
@@ -327,14 +312,6 @@
           Browser FPS:
           <span id="maru-browser-fps">0</span>
         </div>
-        <div class="maru-line">
-          Scratch FPS:
-          <span id="maru-panel-scratch-fps">0</span>
-        </div>
-        <div class="maru-line">
-          60FPS:
-          <span id="maru-panel-60fps">OFF</span>
-        </div>
       `;
 
       document.body.appendChild(panel);
@@ -343,23 +320,9 @@
     const browserEl =
       panel.querySelector("#maru-browser-fps");
 
-    const scratchEl =
-      panel.querySelector("#maru-panel-scratch-fps");
-
-    const sixtyEl =
-      panel.querySelector("#maru-panel-60fps");
-
     if (browserEl) {
-      browserEl.textContent = String(browserFPS);
-    }
-
-    if (scratchEl) {
-      scratchEl.textContent = String(scratchFPS);
-    }
-
-    if (sixtyEl) {
-      sixtyEl.textContent =
-        sixtyFPSMode ? "ON" : "OFF";
+      browserEl.textContent =
+        String(browserFPS);
     }
   }
 
@@ -427,26 +390,6 @@
     if (browserEl) {
       browserEl.textContent =
         String(browserFPS);
-    }
-
-    const scratchEl =
-      document.querySelector(
-        "#maru-panel-scratch-fps"
-      );
-
-    if (scratchEl) {
-      scratchEl.textContent =
-        String(scratchFPS);
-    }
-
-    const sixtyEl =
-      document.querySelector(
-        "#maru-panel-60fps"
-      );
-
-    if (sixtyEl) {
-      sixtyEl.textContent =
-        sixtyFPSMode ? "ON" : "OFF";
     }
 
     const button =
@@ -617,9 +560,6 @@
 
     button.dataset.maru60fpsReady = "1";
 
-    /*
-     * Chromebookを含め、Alt+クリックを使用。
-     */
     button.addEventListener(
       "click",
       event => {
@@ -873,10 +813,6 @@
   function start() {
     setupAllUI();
 
-    /*
-     * MutationObserverは使用しない。
-     * 700msごとのチェックだけでUIを維持する。
-     */
     uiTimer = setInterval(() => {
       setupAllUI();
     }, 700);

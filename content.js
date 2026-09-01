@@ -1,6 +1,18 @@
 (() => {
+  // ==============================
+  // まる Addons バージョン
+  // ==============================
+
+  const MARU_ADDONS_VERSION = "1.1.0";
+
+  // ==============================
+  // 二重起動防止
+  // ==============================
+
   if (window.__MARU_ADDONS__) {
-    console.log("[まる Addons] すでに起動しています");
+    console.log(
+      `[まる Addons] v${MARU_ADDONS_VERSION} はすでに起動しています`
+    );
     return;
   }
 
@@ -11,7 +23,9 @@
   // ==============================
 
   function findVM() {
-    const el = document.querySelector('[class*="stage-wrapper"]');
+    const el = document.querySelector(
+      '[class*="stage-wrapper"]'
+    );
 
     if (!el) return null;
 
@@ -33,12 +47,18 @@
   const vm = findVM();
 
   if (!vm) {
-    console.log("[まる Addons] VMを取得できませんでした");
+    console.log(
+      `[まる Addons] v${MARU_ADDONS_VERSION}: VMを取得できませんでした`
+    );
+
     window.__MARU_ADDONS__ = false;
     return;
   }
 
-  console.log("[まる Addons] VM FOUND!", vm);
+  console.log(
+    `[まる Addons] v${MARU_ADDONS_VERSION} VM FOUND!`,
+    vm
+  );
 
   // ==============================
   // ブロック数
@@ -49,7 +69,9 @@
 
     const sprites = new Set(
       vm.runtime.targets
-        .map(target => target.sprite?.blocks?._blocks)
+        .map(target =>
+          target.sprite?.blocks?._blocks
+        )
         .filter(Boolean)
     );
 
@@ -94,7 +116,10 @@
 
   const renderer = vm.runtime.renderer;
 
-  if (renderer && !renderer.__MARU_ADDONS_PATCHED__) {
+  if (
+    renderer &&
+    !renderer.__MARU_ADDONS_PATCHED__
+  ) {
     renderer.__MARU_ADDONS_PATCHED__ = true;
 
     const originalDraw = renderer.draw;
@@ -102,9 +127,12 @@
     renderer.draw = function () {
       originalDraw.call(this);
 
-      const now = vm.runtime.currentMSecs;
+      const now =
+        vm.runtime.currentMSecs;
 
-      if (typeof now !== "number") return;
+      if (typeof now !== "number") {
+        return;
+      }
 
       if (
         lastRender === null ||
@@ -115,7 +143,9 @@
         return;
       }
 
-      if (now === lastRender) return;
+      if (now === lastRender) {
+        return;
+      }
 
       const calculatedFPS =
         1000 / (now - lastRender);
@@ -137,25 +167,32 @@
   }
 
   // ==============================
-  // UI作成
+  // UI
   // ==============================
 
-  const UI_ID = "maru-addons-inline-ui";
+  const UI_ID =
+    "maru-addons-inline-ui";
 
   function createUI() {
-    if (document.getElementById(UI_ID)) {
-      return document.getElementById(UI_ID);
+    if (
+      document.getElementById(UI_ID)
+    ) {
+      return document.getElementById(
+        UI_ID
+      );
     }
 
-    const stopButton = document.querySelector(
-      'button[aria-label="Stop project"]'
-    );
+    const stopButton =
+      document.querySelector(
+        'button[aria-label="Stop project"]'
+      );
 
     if (!stopButton) {
       return null;
     }
 
-    const ui = document.createElement("div");
+    const ui =
+      document.createElement("div");
 
     ui.id = UI_ID;
 
@@ -165,7 +202,8 @@
       height: "100%",
       marginLeft: "8px",
       padding: "0 6px",
-      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      fontFamily:
+        '"Helvetica Neue", Helvetica, Arial, sans-serif',
       fontSize: "12px",
       fontWeight: "bold",
       color: "#575e75",
@@ -175,6 +213,15 @@
     });
 
     ui.innerHTML = `
+      <span
+        id="maru-addons-version"
+        style="
+          margin-right: 8px;
+        "
+      >
+        まる Addons v${MARU_ADDONS_VERSION}
+      </span>
+
       <span
         id="maru-addons-fps"
         style="
@@ -191,14 +238,13 @@
       </span>
     `;
 
-    // 停止ボタンの直後に挿入
     stopButton.insertAdjacentElement(
       "afterend",
       ui
     );
 
     console.log(
-      "[まる Addons] Scratch UIへ追加しました"
+      `[まる Addons] v${MARU_ADDONS_VERSION} をScratch UIに追加しました`
     );
 
     return ui;
@@ -209,17 +255,22 @@
   // ==============================
 
   function updateUI() {
-    const ui = createUI();
+    const ui =
+      createUI();
 
-    if (!ui) return;
+    if (!ui) {
+      return;
+    }
 
-    const fps = ui.querySelector(
-      "#maru-addons-fps"
-    );
+    const fps =
+      ui.querySelector(
+        "#maru-addons-fps"
+      );
 
-    const blocks = ui.querySelector(
-      "#maru-addons-blocks"
-    );
+    const blocks =
+      ui.querySelector(
+        "#maru-addons-blocks"
+      );
 
     if (fps) {
       fps.textContent =
@@ -233,20 +284,26 @@
   }
 
   // ==============================
-  // ScratchのReact再描画対策
+  // React再描画対策
   // ==============================
 
-  const observer = new MutationObserver(() => {
-    if (!document.getElementById(UI_ID)) {
-      createUI();
-      updateUI();
-    }
-  });
+  const observer =
+    new MutationObserver(() => {
+      if (
+        !document.getElementById(UI_ID)
+      ) {
+        createUI();
+        updateUI();
+      }
+    });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+  observer.observe(
+    document.body,
+    {
+      childList: true,
+      subtree: true
+    }
+  );
 
   // ==============================
   // 起動
@@ -255,9 +312,12 @@
   createUI();
   updateUI();
 
-  setInterval(updateUI, 500);
+  setInterval(
+    updateUI,
+    500
+  );
 
   console.log(
-    "[まる Addons] 起動完了！"
+    `[まる Addons] v${MARU_ADDONS_VERSION} 起動完了！`
   );
 })();

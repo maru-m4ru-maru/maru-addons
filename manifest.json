@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "まる Addons",
+  "version": "1.0.0",
+  "description": "Scratchをもっと便利にする拡張機能",
+  "content_scripts": [
+    {
+      "matches": ["https://scratch.mit.edu/*"],
+      "js": ["content.js"],
+      "css": ["style.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

@@ -32,10 +32,6 @@
 
   console.log("[まる Addons] VM FOUND!", vm);
 
-  // =========================
-  // ブロック数
-  // =========================
-
   function getBlockCount() {
     let count = 0;
 
@@ -53,10 +49,6 @@
 
     return count;
   }
-
-  // =========================
-  // UI
-  // =========================
 
   const panel = document.createElement("div");
 
@@ -82,10 +74,6 @@
 
   document.body.appendChild(panel);
 
-  // =========================
-  // ブラウザFPS
-  // =========================
-
   let browserFrames = 0;
   let browserFPS = 0;
   let lastBrowserTime = performance.now();
@@ -103,10 +91,6 @@
   }
 
   requestAnimationFrame(browserFrame);
-
-  // =========================
-  // Scratch FPS
-  // =========================
 
   let scratchFPS = 0;
   let lastRender = null;
@@ -155,10 +139,6 @@
     };
   }
 
-  // =========================
-  // 更新
-  // =========================
-
   function update() {
     panel.innerHTML = `
       <div>まる Addons</div>
@@ -169,7 +149,6 @@
   }
 
   update();
-
   setInterval(update, 500);
 
   console.log("[まる Addons] 起動完了！");

@@ -1,5 +1,5 @@
 (() => {
-  const MARU_ADDONS_VERSION = "1.4.2";
+  const MARU_ADDONS_VERSION = "1.4.3";
 
   if (window.__MARU_ADDONS_LOADED__) {
     console.log("[Maru] まる Addons はすでに読み込まれています");
@@ -23,7 +23,6 @@
 
   let sixtyFPSMode = false;
   let runtimePatchActive = false;
-
   let originalRuntimeStart = null;
 
   let unshareProcessing = false;
@@ -159,13 +158,15 @@
   function findVM() {
     if (vm?.runtime) return vm;
 
-    const stageWrapper = document.querySelector('[class*="stage-wrapper"]');
+    const stageWrapper =
+      document.querySelector('[class*="stage-wrapper"]');
 
     if (!stageWrapper) return null;
 
-    const fiberEntry = Object.entries(stageWrapper).find(([key]) =>
-      /Fiber/.test(key)
-    );
+    const fiberEntry =
+      Object.entries(stageWrapper).find(([key]) =>
+        /Fiber/.test(key)
+      );
 
     if (!fiberEntry) return null;
 
@@ -181,7 +182,10 @@
       vm = foundVM;
 
       console.log("[Maru] VM FOUND!", vm);
-      console.log("[Maru] targets:", vm.runtime?.targets?.length);
+      console.log(
+        "[Maru] targets:",
+        vm.runtime?.targets?.length
+      );
     }
 
     return vm;
@@ -197,9 +201,14 @@
 
       if (!blocks) continue;
 
-      if (blocks._blocks && typeof blocks._blocks === "object") {
+      if (
+        blocks._blocks &&
+        typeof blocks._blocks === "object"
+      ) {
         total += Object.keys(blocks._blocks).length;
-      } else if (typeof blocks.getAllBlocks === "function") {
+      } else if (
+        typeof blocks.getAllBlocks === "function"
+      ) {
         const allBlocks = blocks.getAllBlocks();
 
         if (Array.isArray(allBlocks)) {
@@ -212,14 +221,14 @@
   }
 
   function updateBlockCount() {
-    const count = getBlockCount();
+    blockCount = getBlockCount();
 
-    blockCount = count;
-
-    const el = document.getElementById(BLOCK_COUNT_ID);
+    const el =
+      document.getElementById(BLOCK_COUNT_ID);
 
     if (el) {
-      el.textContent = `ブロック数: ${blockCount}`;
+      el.textContent =
+        `ブロック数: ${blockCount}`;
     }
   }
 
@@ -237,7 +246,8 @@
       const elapsed = now - lastTime;
 
       if (elapsed >= 1000) {
-        browserFPS = Math.round((frames * 1000) / elapsed);
+        browserFPS =
+          Math.round((frames * 1000) / elapsed);
 
         frames = 0;
         lastTime = now;
@@ -253,146 +263,164 @@
     if (!vm?.runtime) return;
     if (scratchFPSTimer) return;
 
-    let lastInterval = null;
-    let lastTime = performance.now();
-
     scratchFPSTimer = setInterval(() => {
       const runtime = vm?.runtime;
 
       if (!runtime) return;
 
-      const interval = Number(runtime.currentStepTime);
+      const interval =
+        Number(runtime.currentStepTime);
 
-      if (Number.isFinite(interval) && interval > 0) {
-        lastInterval = interval;
-      }
-
-      const now = performance.now();
-      const elapsed = now - lastTime;
-
-      if (elapsed <= 0) return;
-
-      if (lastInterval) {
-        scratchFPS = Math.round(1000 / lastInterval);
-      } else if (runtime._steppingInterval) {
-        scratchFPS = sixtyFPSMode ? 60 : 30;
+      if (
+        Number.isFinite(interval) &&
+        interval > 0
+      ) {
+        scratchFPS =
+          Math.round(1000 / interval);
+      } else if (
+        runtime._steppingInterval
+      ) {
+        scratchFPS =
+          sixtyFPSMode ? 60 : 30;
       } else {
         scratchFPS = 0;
       }
 
-      lastTime = now;
+      const el =
+        document.getElementById(SCRATCH_FPS_ID);
 
-      updateScratchFPSUI();
+      if (el) {
+        el.textContent =
+          `Scratch FPS: ${scratchFPS}`;
+      }
+
+      const panel =
+        document.getElementById(PANEL_ID);
+
+      if (panel) {
+        const panelFPS =
+          panel.querySelector(
+            "#maru-panel-scratch-fps"
+          );
+
+        if (panelFPS) {
+          panelFPS.textContent =
+            String(scratchFPS);
+        }
+      }
     }, 500);
   }
 
-  function updateScratchFPSUI() {
-    const el = document.getElementById(SCRATCH_FPS_ID);
-
-    if (el) {
-      el.textContent = `Scratch FPS: ${scratchFPS}`;
-    }
-
-    const panel = document.getElementById(PANEL_ID);
-
-    if (panel) {
-      const scratchEl =
-        panel.querySelector("#maru-panel-scratch-fps");
-
-      if (scratchEl) {
-        scratchEl.textContent = String(scratchFPS);
-      }
-    }
-  }
-
   function createPanel() {
-    let panel = document.getElementById(PANEL_ID);
+    let panel =
+      document.getElementById(PANEL_ID);
 
     if (!panel) {
       panel = document.createElement("div");
       panel.id = PANEL_ID;
 
       panel.innerHTML = `
-        <div class="maru-title">まる Addons v${MARU_ADDONS_VERSION}</div>
-        <div class="maru-line">Browser FPS: <span id="maru-browser-fps">0</span></div>
-        <div class="maru-line">Scratch FPS: <span id="maru-panel-scratch-fps">0</span></div>
-        <div class="maru-line">60FPS: <span id="maru-panel-60fps">OFF</span></div>
+        <div class="maru-title">
+          まる Addons v${MARU_ADDONS_VERSION}
+        </div>
+        <div class="maru-line">
+          Browser FPS:
+          <span id="maru-browser-fps">0</span>
+        </div>
+        <div class="maru-line">
+          Scratch FPS:
+          <span id="maru-panel-scratch-fps">0</span>
+        </div>
+        <div class="maru-line">
+          60FPS:
+          <span id="maru-panel-60fps">OFF</span>
+        </div>
       `;
 
       document.body.appendChild(panel);
-    }
-
-    const browserEl =
-      panel.querySelector("#maru-browser-fps");
-
-    const scratchEl =
-      panel.querySelector("#maru-panel-scratch-fps");
-
-    const sixtyEl =
-      panel.querySelector("#maru-panel-60fps");
-
-    if (browserEl) {
-      browserEl.textContent = String(browserFPS);
-    }
-
-    if (scratchEl) {
-      scratchEl.textContent = String(scratchFPS);
-    }
-
-    if (sixtyEl) {
-      sixtyEl.textContent = sixtyFPSMode ? "ON" : "OFF";
     }
   }
 
   function setupScratchFPSUI() {
     const stopButton =
-      document.querySelector('button[aria-label="Stop project"]');
+      document.querySelector(
+        'button[aria-label="Stop project"]'
+      );
 
     if (!stopButton) return;
 
-    if (document.getElementById(SCRATCH_FPS_ID)) return;
+    if (
+      document.getElementById(
+        SCRATCH_FPS_ID
+      )
+    ) {
+      return;
+    }
 
     const el = document.createElement("span");
 
     el.id = SCRATCH_FPS_ID;
     el.textContent = "Scratch FPS: 0";
 
-    stopButton.insertAdjacentElement("afterend", el);
+    stopButton.insertAdjacentElement(
+      "afterend",
+      el
+    );
   }
 
   function setupBlockCountUI() {
     const debugButton =
-      document.querySelector('button[aria-label="デバッグ"]');
+      document.querySelector(
+        'button[aria-label="デバッグ"]'
+      );
 
     if (!debugButton) return;
 
-    if (document.getElementById(BLOCK_COUNT_ID)) return;
+    if (
+      document.getElementById(
+        BLOCK_COUNT_ID
+      )
+    ) {
+      return;
+    }
 
     const el = document.createElement("span");
 
     el.id = BLOCK_COUNT_ID;
-    el.textContent = `ブロック数: ${blockCount}`;
+    el.textContent =
+      `ブロック数: ${blockCount}`;
 
-    debugButton.insertAdjacentElement("afterend", el);
+    debugButton.insertAdjacentElement(
+      "afterend",
+      el
+    );
   }
 
   function updateUI() {
     const browserEl =
-      document.querySelector("#maru-browser-fps");
+      document.querySelector(
+        "#maru-browser-fps"
+      );
 
     if (browserEl) {
-      browserEl.textContent = String(browserFPS);
+      browserEl.textContent =
+        String(browserFPS);
     }
 
     const scratchEl =
-      document.querySelector("#maru-panel-scratch-fps");
+      document.querySelector(
+        "#maru-panel-scratch-fps"
+      );
 
     if (scratchEl) {
-      scratchEl.textContent = String(scratchFPS);
+      scratchEl.textContent =
+        String(scratchFPS);
     }
 
     const sixtyEl =
-      document.querySelector("#maru-panel-60fps");
+      document.querySelector(
+        "#maru-panel-60fps"
+      );
 
     if (sixtyEl) {
       sixtyEl.textContent =
@@ -400,21 +428,38 @@
     }
 
     const button =
-      document.querySelector('button[aria-label="Start project"]');
+      document.querySelector(
+        'button[aria-label="Start project"]'
+      );
 
     if (button) {
       if (sixtyFPSMode) {
-        button.classList.add("maru-60fps-active");
+        button.classList.add(
+          "maru-60fps-active"
+        );
       } else {
-        button.classList.remove("maru-60fps-active");
+        button.classList.remove(
+          "maru-60fps-active"
+        );
       }
     }
   }
 
+  /*
+   * 60FPS OFFの通常状態では
+   * runtime.startを一切変更しない。
+   */
+
   function enable60FPS() {
     if (!vm?.runtime) {
-      console.warn("[Maru] VMがまだありません");
-      showStatus("VMが見つかりません");
+      console.warn(
+        "[Maru] VMがまだありません"
+      );
+
+      showStatus(
+        "VMが見つかりません"
+      );
+
       return;
     }
 
@@ -426,45 +471,59 @@
       return;
     }
 
-    if (typeof runtime.start !== "function") {
-      console.error("[Maru] runtime.start がありません");
-      showStatus("60FPSを開始できません");
+    if (
+      typeof runtime.start !==
+      "function"
+    ) {
+      console.error(
+        "[Maru] runtime.start がありません"
+      );
+
+      showStatus(
+        "60FPSを開始できません"
+      );
+
       return;
     }
 
-    /*
-     * ここで初めてruntime.startを保存・変更する。
-     * Addons起動時には一切変更しない。
-     */
-    originalRuntimeStart = runtime.start.bind(runtime);
+    originalRuntimeStart =
+      runtime.start.bind(runtime);
 
     runtime.start = function () {
       if (this._steppingInterval) {
         return;
       }
 
-      const interval = 1000 / 60;
+      const interval =
+        1000 / 60;
 
-      this.currentStepTime = interval;
+      this.currentStepTime =
+        interval;
 
-      this._steppingInterval = setInterval(() => {
-        this._step();
-      }, interval);
+      this._steppingInterval =
+        setInterval(() => {
+          this._step();
+        }, interval);
     };
 
     runtimePatchActive = true;
     sixtyFPSMode = true;
 
-    /*
-     * 現在のScratchの実行ループだけを切り替える。
-     */
-    clearInterval(runtime._steppingInterval);
+    clearInterval(
+      runtime._steppingInterval
+    );
+
     runtime._steppingInterval = null;
 
     runtime.start();
 
-    console.log("[Maru] 60FPS ON");
-    showStatus("まる Addons: 60FPS ON");
+    console.log(
+      "[Maru] 60FPS ON"
+    );
+
+    showStatus(
+      "まる Addons: 60FPS ON"
+    );
 
     updateUI();
   }
@@ -480,30 +539,42 @@
 
     sixtyFPSMode = false;
 
-    clearInterval(runtime._steppingInterval);
+    clearInterval(
+      runtime._steppingInterval
+    );
+
     runtime._steppingInterval = null;
 
-    /*
-     * 60FPS用に変更していたstartを完全に元へ戻す。
-     */
-    if (runtimePatchActive && originalRuntimeStart) {
-      runtime.start = originalRuntimeStart;
+    if (
+      runtimePatchActive &&
+      originalRuntimeStart
+    ) {
+      runtime.start =
+        originalRuntimeStart;
     }
 
     runtimePatchActive = false;
     originalRuntimeStart = null;
 
     /*
-     * 通常のScratchのstart()を呼び戻す。
+     * 元のScratchのstart()を実行。
      */
     try {
       runtime.start();
     } catch (error) {
-      console.warn("[Maru] 通常FPSへの復帰に失敗:", error);
+      console.warn(
+        "[Maru] 通常FPSへの復帰に失敗:",
+        error
+      );
     }
 
-    console.log("[Maru] 60FPS OFF");
-    showStatus("まる Addons: 60FPS OFF");
+    console.log(
+      "[Maru] 60FPS OFF"
+    );
+
+    showStatus(
+      "まる Addons: 60FPS OFF"
+    );
 
     updateUI();
   }
@@ -518,12 +589,15 @@
 
   function setup60FPSButton() {
     const button =
-      document.querySelector('button[aria-label="Start project"]');
+      document.querySelector(
+        'button[aria-label="Start project"]'
+      );
 
     if (!button) return;
 
-    if (button.dataset.maru60fpsReady === "1") {
-      updateUI();
+    if (
+      button.dataset.maru60fpsReady === "1"
+    ) {
       return;
     }
 
@@ -535,7 +609,7 @@
     if (isChromebook) {
       button.addEventListener(
         "contextmenu",
-        (event) => {
+        event => {
           event.preventDefault();
           event.stopPropagation();
 
@@ -544,11 +618,13 @@
         true
       );
 
-      console.log("[Maru] Chromebook: 緑旗の右クリックで60FPS切替");
+      console.log(
+        "[Maru] Chromebook: 緑旗右クリックで60FPS切替"
+      );
     } else {
       button.addEventListener(
         "click",
-        (event) => {
+        event => {
           if (!event.altKey) return;
 
           event.preventDefault();
@@ -559,13 +635,17 @@
         true
       );
 
-      console.log("[Maru] Alt+クリックで60FPS切替");
+      console.log(
+        "[Maru] Alt+クリックで60FPS切替"
+      );
     }
   }
 
   function getProjectId() {
     const match =
-      location.pathname.match(/\/projects\/(\d+)/);
+      location.pathname.match(
+        /\/projects\/(\d+)/
+      );
 
     return match ? match[1] : null;
   }
@@ -576,9 +656,13 @@
 
     for (const cookie of cookies) {
       const trimmed = cookie.trim();
-      const separator = trimmed.indexOf("=");
 
-      if (separator === -1) continue;
+      const separator =
+        trimmed.indexOf("=");
+
+      if (separator === -1) {
+        continue;
+      }
 
       const name =
         trimmed.slice(0, separator);
@@ -600,55 +684,75 @@
   async function unshareProject() {
     if (unshareProcessing) return;
 
-    const projectId = getProjectId();
+    const projectId =
+      getProjectId();
 
     if (!projectId) {
-      alert("プロジェクトIDを取得できませんでした。");
+      alert(
+        "プロジェクトIDを取得できませんでした。"
+      );
+
       return;
     }
 
-    const confirmed = confirm(
-      "このプロジェクトの共有を解除しますか？\n\n共有解除すると、他のユーザーから見えなくなります。"
-    );
+    const confirmed =
+      confirm(
+        "このプロジェクトの共有を解除しますか？\n\n共有解除すると、他のユーザーから見えなくなります。"
+      );
 
     if (!confirmed) return;
 
     unshareProcessing = true;
 
     try {
-      const csrfToken = getCSRFToken();
+      const csrfToken =
+        getCSRFToken();
 
-      const response = await fetch(
-        `/site-api/projects/all/${projectId}/`,
-        {
-          method: "PUT",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": csrfToken,
-            "X-Requested-With": "XMLHttpRequest"
-          },
-          body: JSON.stringify({
-            isPublished: false
-          })
-        }
-      );
+      const response =
+        await fetch(
+          `/site-api/projects/all/${projectId}/`,
+          {
+            method: "PUT",
+            credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              "X-CSRFToken":
+                csrfToken,
+
+              "X-Requested-With":
+                "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+              isPublished: false
+            })
+          }
+        );
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(
+          `HTTP ${response.status}`
+        );
       }
 
-      alert("共有を解除しました！");
+      alert(
+        "共有を解除しました！"
+      );
 
       updateUnshareButton();
 
     } catch (error) {
-      console.error("[Maru] 共有解除エラー:", error);
+      console.error(
+        "[Maru] 共有解除エラー:",
+        error
+      );
 
       alert(
         "共有解除に失敗しました。\n\n" +
         error.message
       );
+
     } finally {
       unshareProcessing = false;
     }
@@ -656,34 +760,50 @@
 
   function setupUnshareButton() {
     const button =
-      [...document.querySelectorAll("button")].find(
-        (el) =>
-          el.getAttribute("aria-label") === null &&
-          el.textContent.trim() === "共有されたもの"
-      );
+      [...document.querySelectorAll("button")]
+        .find(
+          el =>
+            el.getAttribute("aria-label") ===
+              null &&
+            el.textContent.trim() ===
+              "共有されたもの"
+        );
 
     if (!button) return;
 
-    if (button.dataset.maruUnshareReady === "1") return;
+    if (
+      button.dataset.maruUnshareReady ===
+      "1"
+    ) {
+      return;
+    }
 
-    const span = button.querySelector("span");
+    const span =
+      button.querySelector("span");
 
     if (span) {
       span.textContent = "非共有";
     } else {
-      button.childNodes.forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
+      button.childNodes.forEach(node => {
+        if (
+          node.nodeType ===
+          Node.TEXT_NODE
+        ) {
           node.textContent = "非共有";
         }
       });
     }
 
-    button.classList.add("maru-unshare-button");
-    button.dataset.maruUnshareReady = "1";
+    button.classList.add(
+      "maru-unshare-button"
+    );
+
+    button.dataset.maruUnshareReady =
+      "1";
 
     button.addEventListener(
       "click",
-      (event) => {
+      event => {
         event.preventDefault();
         event.stopPropagation();
 
@@ -692,31 +812,41 @@
       true
     );
 
-    console.log("[Maru] 非共有ボタンを設定しました");
+    console.log(
+      "[Maru] 非共有ボタンを設定しました"
+    );
   }
 
   function updateUnshareButton() {
     const button =
-      [...document.querySelectorAll("button")].find(
-        (el) =>
-          el.textContent.trim() === "共有されたもの"
-      );
+      [...document.querySelectorAll("button")]
+        .find(
+          el =>
+            el.textContent.trim() ===
+            "共有されたもの"
+        );
 
     if (!button) return;
 
-    const span = button.querySelector("span");
+    const span =
+      button.querySelector("span");
 
     if (span) {
       span.textContent = "共有";
     } else {
-      button.childNodes.forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
+      button.childNodes.forEach(node => {
+        if (
+          node.nodeType ===
+          Node.TEXT_NODE
+        ) {
           node.textContent = "共有";
         }
       });
     }
 
-    button.classList.add("maru-unshare-button");
+    button.classList.add(
+      "maru-unshare-button"
+    );
   }
 
   function setupAllUI() {
@@ -740,55 +870,50 @@
   }
 
   function start() {
+    /*
+     * 重要:
+     * MutationObserverは使わない。
+     * 700msごとの低頻度チェックだけにする。
+     */
     setupAllUI();
 
     uiTimer = setInterval(() => {
-      findVM();
-
-      setupBrowserFPS();
-      setupScratchFPSUI();
-      setupBlockCountUI();
-      createPanel();
-      setup60FPSButton();
-      setupUnshareButton();
-
-      if (vm) {
-        setupScratchFPS();
-        updateBlockCount();
-      }
-
-      updateUI();
+      setupAllUI();
     }, 700);
-
-    const observer =
-      new MutationObserver(() => {
-        setupAllUI();
-      });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
 
     window.__MARU_ADDONS_CLEANUP__ = () => {
       clearInterval(uiTimer);
       clearInterval(scratchFPSTimer);
 
-      /*
-       * 60FPS中なら、まず通常状態へ戻す。
-       */
-      if (sixtyFPSMode && vm?.runtime) {
+      if (
+        sixtyFPSMode &&
+        vm?.runtime
+      ) {
         disable60FPS();
       }
 
-      document.getElementById(PANEL_ID)?.remove();
-      document.getElementById(SCRATCH_FPS_ID)?.remove();
-      document.getElementById(BLOCK_COUNT_ID)?.remove();
-      document.getElementById(SIXTY_STATUS_ID)?.remove();
+      document
+        .getElementById(PANEL_ID)
+        ?.remove();
 
-      window.__MARU_ADDONS_LOADED__ = false;
+      document
+        .getElementById(SCRATCH_FPS_ID)
+        ?.remove();
 
-      console.log("[Maru] クリーンアップしました");
+      document
+        .getElementById(BLOCK_COUNT_ID)
+        ?.remove();
+
+      document
+        .getElementById(SIXTY_STATUS_ID)
+        ?.remove();
+
+      window.__MARU_ADDONS_LOADED__ =
+        false;
+
+      console.log(
+        "[Maru] クリーンアップしました"
+      );
     };
 
     console.log(

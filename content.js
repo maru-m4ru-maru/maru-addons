@@ -1,5 +1,5 @@
 (() => {
-  const MARU_ADDONS_VERSION = "1.4.3";
+  const MARU_ADDONS_VERSION = "1.4.4";
 
   if (window.__MARU_ADDONS_LOADED__) {
     console.log("[Maru] まる Addons はすでに読み込まれています");
@@ -339,6 +339,28 @@
 
       document.body.appendChild(panel);
     }
+
+    const browserEl =
+      panel.querySelector("#maru-browser-fps");
+
+    const scratchEl =
+      panel.querySelector("#maru-panel-scratch-fps");
+
+    const sixtyEl =
+      panel.querySelector("#maru-panel-60fps");
+
+    if (browserEl) {
+      browserEl.textContent = String(browserFPS);
+    }
+
+    if (scratchEl) {
+      scratchEl.textContent = String(scratchFPS);
+    }
+
+    if (sixtyEl) {
+      sixtyEl.textContent =
+        sixtyFPSMode ? "ON" : "OFF";
+    }
   }
 
   function setupScratchFPSUI() {
@@ -444,11 +466,6 @@
       }
     }
   }
-
-  /*
-   * 60FPS OFFの通常状態では
-   * runtime.startを一切変更しない。
-   */
 
   function enable60FPS() {
     if (!vm?.runtime) {
@@ -556,9 +573,6 @@
     runtimePatchActive = false;
     originalRuntimeStart = null;
 
-    /*
-     * 元のScratchのstart()を実行。
-     */
     try {
       runtime.start();
     } catch (error) {
@@ -603,42 +617,29 @@
 
     button.dataset.maru60fpsReady = "1";
 
-    const isChromebook =
-      navigator.userAgent.includes("CrOS");
+    /*
+     * Chromebookを含め、Alt+クリックを使用。
+     */
+    button.addEventListener(
+      "click",
+      event => {
+        if (!event.altKey) return;
 
-    if (isChromebook) {
-      button.addEventListener(
-        "contextmenu",
-        event => {
-          event.preventDefault();
-          event.stopPropagation();
+        event.preventDefault();
+        event.stopPropagation();
 
-          toggle60FPS();
-        },
-        true
-      );
+        console.log(
+          "[Maru] Alt+クリック検出"
+        );
 
-      console.log(
-        "[Maru] Chromebook: 緑旗右クリックで60FPS切替"
-      );
-    } else {
-      button.addEventListener(
-        "click",
-        event => {
-          if (!event.altKey) return;
+        toggle60FPS();
+      },
+      true
+    );
 
-          event.preventDefault();
-          event.stopPropagation();
-
-          toggle60FPS();
-        },
-        true
-      );
-
-      console.log(
-        "[Maru] Alt+クリックで60FPS切替"
-      );
-    }
+    console.log(
+      "[Maru] Alt+クリックで60FPS切替を設定しました"
+    );
   }
 
   function getProjectId() {
@@ -870,13 +871,12 @@
   }
 
   function start() {
-    /*
-     * 重要:
-     * MutationObserverは使わない。
-     * 700msごとの低頻度チェックだけにする。
-     */
     setupAllUI();
 
+    /*
+     * MutationObserverは使用しない。
+     * 700msごとのチェックだけでUIを維持する。
+     */
     uiTimer = setInterval(() => {
       setupAllUI();
     }, 700);

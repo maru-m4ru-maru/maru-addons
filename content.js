@@ -6,11 +6,19 @@
 
   window.__MARU_ADDONS__ = true;
 
+  // ==============================
+  // VM取得
+  // ==============================
+
   function findVM() {
     const el = document.querySelector('[class*="stage-wrapper"]');
+
     if (!el) return null;
 
-    const entry = Object.entries(el).find(([key]) => /Fiber/.test(key));
+    const entry = Object.entries(el).find(([key]) =>
+      /Fiber/.test(key)
+    );
+
     if (!entry) return null;
 
     let fiber = entry[1];
@@ -32,6 +40,10 @@
 
   console.log("[まる Addons] VM FOUND!", vm);
 
+  // ==============================
+  // ブロック数
+  // ==============================
+
   function getBlockCount() {
     let count = 0;
 
@@ -50,29 +62,9 @@
     return count;
   }
 
-  const panel = document.createElement("div");
-
-  panel.id = "maru-addons-panel";
-
-  Object.assign(panel.style, {
-    position: "fixed",
-    top: "8px",
-    right: "8px",
-    zIndex: "999999",
-    padding: "6px 10px",
-    background: "rgba(0, 0, 0, 0.75)",
-    color: "#fff",
-    borderRadius: "6px",
-    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
-    fontSize: "12px",
-    fontWeight: "bold",
-    lineHeight: "1.5",
-    pointerEvents: "none",
-    userSelect: "none",
-    backdropFilter: "blur(4px)"
-  });
-
-  document.body.appendChild(panel);
+  // ==============================
+  // ブラウザFPS
+  // ==============================
 
   let browserFrames = 0;
   let browserFPS = 0;
@@ -91,6 +83,10 @@
   }
 
   requestAnimationFrame(browserFrame);
+
+  // ==============================
+  // Scratch FPS
+  // ==============================
 
   let scratchFPS = 0;
   let lastRender = null;
@@ -121,7 +117,8 @@
 
       if (now === lastRender) return;
 
-      const calculatedFPS = 1000 / (now - lastRender);
+      const calculatedFPS =
+        1000 / (now - lastRender);
 
       if (typeof lastFPS !== "number") {
         lastFPS = calculatedFPS;
@@ -139,17 +136,128 @@
     };
   }
 
-  function update() {
-    panel.innerHTML = `
-      <div>まる Addons</div>
-      <div>ブロック数　${getBlockCount()}</div>
-      <div>ブラウザFPS　${browserFPS}</div>
-      <div>Scratch FPS　${scratchFPS}</div>
+  // ==============================
+  // UI作成
+  // ==============================
+
+  const UI_ID = "maru-addons-inline-ui";
+
+  function createUI() {
+    if (document.getElementById(UI_ID)) {
+      return document.getElementById(UI_ID);
+    }
+
+    const stopButton = document.querySelector(
+      'button[aria-label="Stop project"]'
+    );
+
+    if (!stopButton) {
+      return null;
+    }
+
+    const ui = document.createElement("div");
+
+    ui.id = UI_ID;
+
+    Object.assign(ui.style, {
+      display: "flex",
+      alignItems: "center",
+      height: "100%",
+      marginLeft: "8px",
+      padding: "0 6px",
+      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+      fontSize: "12px",
+      fontWeight: "bold",
+      color: "#575e75",
+      whiteSpace: "nowrap",
+      userSelect: "none",
+      pointerEvents: "none"
+    });
+
+    ui.innerHTML = `
+      <span
+        id="maru-addons-fps"
+        style="
+          margin-right: 8px;
+        "
+      >
+        FPS: --
+      </span>
+
+      <span
+        id="maru-addons-blocks"
+      >
+        ブロック: --
+      </span>
     `;
+
+    // 停止ボタンの直後に挿入
+    stopButton.insertAdjacentElement(
+      "afterend",
+      ui
+    );
+
+    console.log(
+      "[まる Addons] Scratch UIへ追加しました"
+    );
+
+    return ui;
   }
 
-  update();
-  setInterval(update, 500);
+  // ==============================
+  // UI更新
+  // ==============================
 
-  console.log("[まる Addons] 起動完了！");
+  function updateUI() {
+    const ui = createUI();
+
+    if (!ui) return;
+
+    const fps = ui.querySelector(
+      "#maru-addons-fps"
+    );
+
+    const blocks = ui.querySelector(
+      "#maru-addons-blocks"
+    );
+
+    if (fps) {
+      fps.textContent =
+        `FPS: ${scratchFPS}`;
+    }
+
+    if (blocks) {
+      blocks.textContent =
+        `ブロック: ${getBlockCount()}`;
+    }
+  }
+
+  // ==============================
+  // ScratchのReact再描画対策
+  // ==============================
+
+  const observer = new MutationObserver(() => {
+    if (!document.getElementById(UI_ID)) {
+      createUI();
+      updateUI();
+    }
+  });
+
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  // ==============================
+  // 起動
+  // ==============================
+
+  createUI();
+  updateUI();
+
+  setInterval(updateUI, 500);
+
+  console.log(
+    "[まる Addons] 起動完了！"
+  );
 })();

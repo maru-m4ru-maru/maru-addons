@@ -167,18 +167,38 @@
   }
 
   // ==============================
-  // UI
+  // 共通スタイル
   // ==============================
 
-  const UI_ID =
-    "maru-addons-inline-ui";
+  const baseStyle = {
+    display: "flex",
+    alignItems: "center",
+    height: "100%",
+    fontFamily:
+      '"Helvetica Neue", Helvetica, Arial, sans-serif',
+    fontSize: "12px",
+    fontWeight: "bold",
+    whiteSpace: "nowrap",
+    userSelect: "none",
+    pointerEvents: "none"
+  };
 
-  function createUI() {
+  // ==============================
+  // Scratch FPS
+  // 停止ボタンの右
+  // ==============================
+
+  const SCRATCH_FPS_ID =
+    "maru-addons-scratch-fps";
+
+  function createScratchFPS() {
     if (
-      document.getElementById(UI_ID)
+      document.getElementById(
+        SCRATCH_FPS_ID
+      )
     ) {
       return document.getElementById(
-        UI_ID
+        SCRATCH_FPS_ID
       );
     }
 
@@ -191,94 +211,174 @@
       return null;
     }
 
-    const ui =
+    const element =
       document.createElement("div");
 
-    ui.id = UI_ID;
+    element.id = SCRATCH_FPS_ID;
 
-    Object.assign(ui.style, {
-      display: "flex",
-      alignItems: "center",
-      height: "100%",
-      marginLeft: "8px",
-      padding: "0 6px",
-      fontFamily:
-        '"Helvetica Neue", Helvetica, Arial, sans-serif',
-      fontSize: "12px",
-      fontWeight: "bold",
-      color: "#575e75",
-      whiteSpace: "nowrap",
-      userSelect: "none",
-      pointerEvents: "none"
-    });
+    Object.assign(
+      element.style,
+      baseStyle,
+      {
+        marginLeft: "8px",
+        padding: "0 4px",
+        color: "#4CBFE6"
+      }
+    );
 
-    ui.innerHTML = `
-      <span
-        id="maru-addons-version"
-        style="
-          margin-right: 8px;
-        "
-      >
-        まる Addons v${MARU_ADDONS_VERSION}
-      </span>
-
-      <span
-        id="maru-addons-fps"
-        style="
-          margin-right: 8px;
-        "
-      >
-        FPS: --
-      </span>
-
-      <span
-        id="maru-addons-blocks"
-      >
-        ブロック: --
-      </span>
-    `;
+    element.textContent =
+      "Scratch FPS: --";
 
     stopButton.insertAdjacentElement(
       "afterend",
-      ui
+      element
     );
 
-    console.log(
-      `[まる Addons] v${MARU_ADDONS_VERSION} をScratch UIに追加しました`
-    );
-
-    return ui;
+    return element;
   }
 
   // ==============================
-  // UI更新
+  // まる Addons + ブラウザFPS
+  // 右上
+  // ==============================
+
+  const TOP_PANEL_ID =
+    "maru-addons-panel";
+
+  function createTopPanel() {
+    if (
+      document.getElementById(
+        TOP_PANEL_ID
+      )
+    ) {
+      return document.getElementById(
+        TOP_PANEL_ID
+      );
+    }
+
+    const panel =
+      document.createElement("div");
+
+    panel.id = TOP_PANEL_ID;
+
+    Object.assign(
+      panel.style,
+      {
+        position: "fixed",
+        top: "8px",
+        right: "8px",
+        zIndex: "999999",
+        padding: "6px 10px",
+        background:
+          "rgba(0, 0, 0, 0.75)",
+        color: "#fff",
+        borderRadius: "6px",
+        fontFamily:
+          '"Helvetica Neue", Helvetica, Arial, sans-serif',
+        fontSize: "12px",
+        fontWeight: "bold",
+        lineHeight: "1.5",
+        pointerEvents: "none",
+        userSelect: "none",
+        backdropFilter:
+          "blur(4px)"
+      }
+    );
+
+    document.body.appendChild(panel);
+
+    return panel;
+  }
+
+  // ==============================
+  // ブロック数
+  // デバッグの右
+  // ==============================
+
+  const BLOCKS_ID =
+    "maru-addons-block-count";
+
+  function createBlockCount() {
+    if (
+      document.getElementById(
+        BLOCKS_ID
+      )
+    ) {
+      return document.getElementById(
+        BLOCKS_ID
+      );
+    }
+
+    const debugButton =
+      document.querySelector(
+        'button[aria-label="デバッグ"]'
+      );
+
+    if (!debugButton) {
+      return null;
+    }
+
+    const element =
+      document.createElement("div");
+
+    element.id = BLOCKS_ID;
+
+    Object.assign(
+      element.style,
+      baseStyle,
+      {
+        marginLeft: "8px",
+        padding: "0 4px",
+        color: "#575E75"
+      }
+    );
+
+    element.textContent =
+      "ブロック: --";
+
+    debugButton.insertAdjacentElement(
+      "afterend",
+      element
+    );
+
+    return element;
+  }
+
+  // ==============================
+  // 更新
   // ==============================
 
   function updateUI() {
-    const ui =
-      createUI();
+    // Scratch FPS
+    const scratchElement =
+      createScratchFPS();
 
-    if (!ui) {
-      return;
+    if (scratchElement) {
+      scratchElement.textContent =
+        `Scratch FPS: ${scratchFPS}`;
     }
 
-    const fps =
-      ui.querySelector(
-        "#maru-addons-fps"
-      );
+    // 右上
+    const panel =
+      createTopPanel();
 
-    const blocks =
-      ui.querySelector(
-        "#maru-addons-blocks"
-      );
-
-    if (fps) {
-      fps.textContent =
-        `FPS: ${scratchFPS}`;
+    if (panel) {
+      panel.innerHTML = `
+        <div>
+          まる Addons v${MARU_ADDONS_VERSION}
+        </div>
+        <div>
+          ブラウザFPS　${browserFPS}
+        </div>
+      `;
     }
 
-    if (blocks) {
-      blocks.textContent =
+    // ブロック数
+    const blockElement =
+      createBlockCount();
+
+    if (blockElement) {
+      blockElement.textContent =
         `ブロック: ${getBlockCount()}`;
     }
   }
@@ -290,10 +390,19 @@
   const observer =
     new MutationObserver(() => {
       if (
-        !document.getElementById(UI_ID)
+        !document.getElementById(
+          SCRATCH_FPS_ID
+        )
       ) {
-        createUI();
-        updateUI();
+        createScratchFPS();
+      }
+
+      if (
+        !document.getElementById(
+          BLOCKS_ID
+        )
+      ) {
+        createBlockCount();
       }
     });
 
@@ -309,7 +418,10 @@
   // 起動
   // ==============================
 
-  createUI();
+  createScratchFPS();
+  createTopPanel();
+  createBlockCount();
+
   updateUI();
 
   setInterval(

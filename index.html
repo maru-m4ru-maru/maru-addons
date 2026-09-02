@@ -15,7 +15,42 @@
 <main id="top">
 <section class="hero"><div class="container hero-grid"><div class="card hero-main"><div class="eyebrow">SCRATCH UTILITY</div><h1><span class="gradient">Scratchを、</span><br>もっと便利に。</h1><p class="lead">まる Addons は、Scratch に「ちょっと欲しかった」を追加する非公式ユーティリティです。拡張機能が使えない環境でも、DevTools のコンソールから起動できます。</p><div class="actions"><a class="btn primary" href="#install">今すぐ使う</a><a class="btn secondary" href="https://github.com/maru-m4ru-maru/maru-addons" target="_blank" rel="noreferrer">GitHubを見る</a></div></div><aside class="card side"><div><div class="label">CURRENT VERSION</div><div class="ver" id="currentVersion">v1.4.5</div><div class="note" id="versionNote">Scratch向け / コンソール実行対応</div></div><div class="stats"><div class="stat"><strong>60 FPS</strong><span>切替モード</span></div><div class="stat"><strong>FPS</strong><span>モニター</span></div><div class="stat"><strong>Block</strong><span>ブロック数表示</span></div><div class="stat"><strong>VM</strong><span>開発用アクセス</span></div></div></aside></div></section>
 <section id="features"><div class="container"><div class="head"><div class="kicker">FEATURES</div><h2>今ある機能</h2><p>現在のMARU Addons に搭載されている主な機能です。</p></div><div class="grid"><article class="card feature"><div class="icon">FPS</div><h3>Browser FPS</h3><p>ブラウザ側の描画フレームレートをパネルに表示します。</p></article><article class="card feature"><div class="icon">60</div><h3>60FPS Mode</h3><p>Alt + スタートボタンでScratchランタイムを60FPS動作へ切り替え。もう一度で通常動作へ戻せます。</p></article><article class="card feature"><div class="icon">#</div><h3>ブロック数表示</h3><p>現在のプロジェクト内に存在するブロック数を表示します。</p></article><article class="card feature"><div class="icon">ON</div><h3>Scratch FPS</h3><p>Scratchランタイム側のステップ間隔からFPSを確認できます。</p></article><article class="card feature"><div class="icon">VM</div><h3>VM取得</h3><p>ScratchのVMを検出し、ランタイムやターゲットへのアクセスを行います。</p></article><article class="card feature"><div class="icon">↗</div><h3>共有解除</h3><p>プロジェクトページの「共有されたもの」を「非共有」として扱い、共有解除操作を実行します。</p></article></div></div></section>
-<section id="install"><div class="container"><div class="head"><div class="kicker">INSTALL</div><h2>1回貼るだけ。</h2><p>拡張機能をインストールできない環境でも、Scratchを開いてDevToolsのConsoleに下のコードを貼り付けて実行します。</p></div><div class="manage"><div class="card panel"><div class="steps"><div class="step"><div class="num">1</div><div><strong>Scratchを開く</strong><span>プロジェクトページなど、Scratchのページを開きます。</span></div></div><div class="step"><div class="num">2</div><div><strong>DevTools → Console</strong><span>ブラウザの開発者ツールでConsoleを開きます。</span></div></div><div class="step"><div class="num">3</div><div><strong>コードを貼ってEnter</strong><span>下のボタンでコピーして、そのまま実行します。</span></div></div></div><div class="notice" id="installWarning"><b>注意:</b> まる Addons はScratch非公式のツールです。Scratch側の仕様変更などで動作しなくなる場合があります。</div></div><div class="code"><div class="code-top"><span>Console / loader</span><button class="copy" id="copyBtn">コピー</button></div><pre><code id="loader">fetch("https://raw.githubusercontent.com/maru-m4ru-maru/maru-addons/main/content.js")
+
+  <div class="card panel" style="margin-top:15px">
+<h3>🚀 DevTools Snippets（おすすめ）</h3>
+<p>
+拡張機能が使えない環境では、ChromeのDevTools Snippetsを使ってMARU Addonsを起動できます。
+</p>
+
+<div class="steps">
+<div class="step"><div class="num">1</div><div><strong>F12でDevToolsを開く</strong><span>Scratchを開いた状態で開きます。</span></div></div>
+<div class="step"><div class="num">2</div><div><strong>Sources → Snippets</strong><span>新しいSnippetを作成します。</span></div></div>
+<div class="step"><div class="num">3</div><div><strong>コードを貼って保存</strong><span>RunでMARU Addonsが起動します。</span></div></div>
+</div>
+
+<div class="code" style="margin-top:15px">
+<pre><code>fetch("https://raw.githubusercontent.com/maru-m4ru-maru/maru-addons/main/content.js")
+  .then(r =&gt; r.text())
+  .then(eval);</code></pre>
+</div>
+</div>
+
+<div class="card panel" style="margin-top:15px">
+<h3>🔒 安全性について</h3>
+<p>
+MARU AddonsはScratch非公式のユーティリティです。
+</p>
+<ul>
+<li>コードは公式GitHubから取得されます</li>
+<li>パスワードや個人情報を取得しません</li>
+<li>通信は最新版コード取得のためGitHubへ行います</li>
+<li>不明なコードではなく公式ページのコードを使用してください</li>
+</ul>
+<p>
+⚠️ Scratchやブラウザの仕様変更により利用できない場合があります。
+</p>
+</div>
+  <section id="install"><div class="container"><div class="head"><div class="kicker">INSTALL</div><h2>1回貼るだけ。</h2><p>拡張機能をインストールできない環境でも、Scratchを開いてDevToolsのConsoleに下のコードを貼り付けて実行します。</p></div><div class="manage"><div class="card panel"><div class="steps"><div class="step"><div class="num">1</div><div><strong>Scratchを開く</strong><span>プロジェクトページなど、Scratchのページを開きます。</span></div></div><div class="step"><div class="num">2</div><div><strong>DevTools → Console</strong><span>ブラウザの開発者ツールでConsoleを開きます。</span></div></div><div class="step"><div class="num">3</div><div><strong>コードを貼ってEnter</strong><span>下のボタンでコピーして、そのまま実行します。</span></div></div></div><div class="notice" id="installWarning"><b>注意:</b> まる Addons はScratch非公式のツールです。Scratch側の仕様変更などで動作しなくなる場合があります。</div></div><div class="code"><div class="code-top"><span>Console / loader</span><button class="copy" id="copyBtn">コピー</button></div><pre><code id="loader">fetch("https://raw.githubusercontent.com/maru-m4ru-maru/maru-addons/main/content.js")
   .then(r =&gt; r.text())
   .then(eval);</code></pre></div></div></div></section>
 <section id="updates"><div class="container"><div class="head"><div class="kicker">UPDATES &amp; NOTES</div><h2>更新情報・注意書き</h2><p>Adminから更新すると、ここも自動で変わります。</p></div><div class="update"><div class="card update-card"><h3>Version History</h3><div class="version-list" id="versionHistory"></div></div><div class="card update-card"><h3>お知らせ</h3><div id="noticeArea"><p class="muted">読み込み中...</p></div><div id="warningArea"></div></div></div></div></section>

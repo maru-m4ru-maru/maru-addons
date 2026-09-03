@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "まる Addons",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "Scratchをもっと便利にする拡張機能",
   "content_scripts": [
     {

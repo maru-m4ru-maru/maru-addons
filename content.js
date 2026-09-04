@@ -798,13 +798,13 @@
   let dropDragDepth = 0;
 
   function isSpriteFile(file) {
-    return /\\.sprite3$/i.test(file.name);
+    return /\.sprite3$/i.test(file.name);
   }
 
   function isCostumeFile(file) {
     return (
-      /^image\\/(png|jpeg|jpg|gif|svg\\+xml|webp|bmp)$/i.test(file.type) ||
-      /\\.(png|jpe?g|gif|svg|webp|bmp)$/i.test(file.name)
+      /^image\/(png|jpeg|jpg|gif|svg\+xml|webp|bmp)$/i.test(file.type) ||
+      /\.(png|jpe?g|gif|svg|webp|bmp)$/i.test(file.name)
     );
   }
 
@@ -921,7 +921,7 @@
     overlay = document.createElement("div");
     overlay.id = DROP_UPLOADER_ID;
     overlay.textContent =
-      "📁 ファイルをここにドロップ\\n\\n画像 → コスチューム\\n.sprite3 → スプライト";
+      "📁 ファイルをここにドロップ\n\n画像 → コスチューム\n.sprite3 → スプライト";
 
     Object.assign(overlay.style, {
       position: "fixed",

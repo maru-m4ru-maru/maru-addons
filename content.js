@@ -1,5 +1,5 @@
 (() => {
-  const MARU_ADDONS_VERSION = "1.5.0";
+  const MARU_ADDONS_VERSION = "1.5.1";
 
   if (window.__MARU_ADDONS_LOADED__) {
     console.log("[Maru] まる Addons はすでに読み込まれています");
@@ -792,53 +792,70 @@
 
 
   // =========================
+  // =========================
   // Scratch ファイルドラッグ&ドロップ
   // =========================
   const DROP_UPLOADER_ID = "maru-addons-drop-overlay";
   let dropDragDepth = 0;
 
   function isSpriteFile(file) {
-    return /\.sprite3$/i.test(file.name);
+    return file.name.toLowerCase().endsWith(".sprite3");
   }
 
   function isCostumeFile(file) {
+    const name = file.name.toLowerCase();
+    const type = (file.type || "").toLowerCase();
+
     return (
-      /^image\/(png|jpeg|jpg|gif|svg\+xml|webp|bmp)$/i.test(file.type) ||
-      /\.(png|jpe?g|gif|svg|webp|bmp)$/i.test(file.name)
+      type.indexOf("image/") === 0 ||
+      name.endsWith(".png") ||
+      name.endsWith(".jpg") ||
+      name.endsWith(".jpeg") ||
+      name.endsWith(".gif") ||
+      name.endsWith(".svg") ||
+      name.endsWith(".webp") ||
+      name.endsWith(".bmp")
     );
   }
 
   function makeFileList(file) {
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    return dt.files;
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    return dataTransfer.files;
   }
 
   function getFileInputs() {
-    return [...document.querySelectorAll('input[type="file"]')];
+    return Array.from(document.querySelectorAll('input[type="file"]'));
   }
 
   function findSpriteInput() {
     const inputs = getFileInputs();
 
-    let input = inputs.find(i => /sprite3/i.test(i.accept || ""));
+    let input = inputs.find(function (item) {
+      return (item.accept || "").toLowerCase().indexOf("sprite3") !== -1;
+    });
+
     if (input) return input;
 
-    input = inputs.find(i => /(zip|scratch)/i.test(i.accept || ""));
+    input = inputs.find(function (item) {
+      const accept = (item.accept || "").toLowerCase();
+      return accept.indexOf("zip") !== -1 || accept.indexOf("scratch") !== -1;
+    });
+
     return input || null;
   }
 
   function findCostumeInput() {
     const inputs = getFileInputs();
 
-    let input = inputs.find(i =>
-      /image|png|jpe?g|gif|svg|webp|bmp/i.test(i.accept || "")
-    );
+    let input = inputs.find(function (item) {
+      return (item.accept || "").toLowerCase().indexOf("image") !== -1;
+    });
+
     if (input) return input;
 
-    input = inputs.find(i => {
-      const accept = i.accept || "";
-      return accept === "" && i.multiple === false;
+    input = inputs.find(function (item) {
+      return !item.accept && item.multiple === false;
     });
 
     return input || null;
@@ -852,25 +869,30 @@
     const setter = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       "files"
-    )?.set;
+    );
 
-    if (!setter) {
+    if (!setter || !setter.set) {
       throw new Error("ブラウザが input.files の設定に対応していません。");
     }
 
-    setter.call(input, makeFileList(file));
+    setter.set.call(input, makeFileList(file));
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  async function waitForDropInput(type, timeout = 1500) {
+  async function waitForDropInput(type, timeout) {
     const startTime = Date.now();
+    const maxWait = timeout || 1500;
 
-    while (Date.now() - startTime < timeout) {
-      const input =
-        type === "sprite" ? findSpriteInput() : findCostumeInput();
+    while (Date.now() - startTime < maxWait) {
+      const input = type === "sprite"
+        ? findSpriteInput()
+        : findCostumeInput();
 
       if (input) return input;
-      await new Promise(resolve => setTimeout(resolve, 100));
+
+      await new Promise(function (resolve) {
+        setTimeout(resolve, 100);
+      });
     }
 
     return null;
@@ -880,36 +902,36 @@
     for (const file of files) {
       try {
         if (isSpriteFile(file)) {
-          console.log("[Maru] 🧩 Sprite3検出:", file.name);
+          console.log("[Maru] Sprite3検出:", file.name);
 
           let input = findSpriteInput();
           if (!input) input = await waitForDropInput("sprite");
 
           if (!input) {
-            console.error("[Maru] スプライト用のファイル入力欄が見つかりませんでした。", file);
+            console.error("[Maru] スプライト用の入力欄が見つかりません:", file.name);
             continue;
           }
 
           injectDropFile(input, file);
-          console.log("[Maru] ✓ スプライトをScratchへ渡しました:", file.name);
+          console.log("[Maru] スプライトをScratchへ渡しました:", file.name);
         } else if (isCostumeFile(file)) {
-          console.log("[Maru] 🖼️ コスチューム検出:", file.name);
+          console.log("[Maru] コスチューム検出:", file.name);
 
           let input = findCostumeInput();
           if (!input) input = await waitForDropInput("costume");
 
           if (!input) {
-            console.error("[Maru] コスチューム用のファイル入力欄が見つかりませんでした。", file);
+            console.error("[Maru] コスチューム用の入力欄が見つかりません:", file.name);
             continue;
           }
 
           injectDropFile(input, file);
-          console.log("[Maru] ✓ コスチュームをScratchへ渡しました:", file.name);
+          console.log("[Maru] コスチュームをScratchへ渡しました:", file.name);
         } else {
-          console.warn("[Maru] ⚠️ 対応していないファイルです:", file.name, file.type);
+          console.warn("[Maru] 対応していないファイルです:", file.name, file.type);
         }
       } catch (error) {
-        console.error("[Maru] ☓ ドロップ処理エラー:", error);
+        console.error("[Maru] ドロップ処理エラー:", error);
       }
     }
   }
@@ -921,7 +943,7 @@
     overlay = document.createElement("div");
     overlay.id = DROP_UPLOADER_ID;
     overlay.textContent =
-      "📁 ファイルをここにドロップ\n\n画像 → コスチューム\n.sprite3 → スプライト";
+      "ファイルをここにドロップ\n\n画像 -> コスチューム\n.sprite3 -> スプライト";
 
     Object.assign(overlay.style, {
       position: "fixed",
@@ -947,8 +969,7 @@
   }
 
   function showDropOverlay() {
-    const overlay = getDropOverlay();
-    overlay.style.display = "flex";
+    getDropOverlay().style.display = "flex";
   }
 
   function hideDropOverlay() {
@@ -993,10 +1014,10 @@
     dropDragDepth = 0;
     hideDropOverlay();
 
-    const files = [...(event.dataTransfer?.files || [])];
+    const files = Array.from(event.dataTransfer ? event.dataTransfer.files : []);
 
     if (!files.length) {
-      console.warn("[Maru] ⚠️ ドロップされたファイルを取得できませんでした。");
+      console.warn("[Maru] ドロップされたファイルを取得できませんでした。");
       return;
     }
 
@@ -1015,7 +1036,7 @@
 
     window.__MARU_ADDONS_DROP_UPLOADER__ = true;
 
-    console.log("[Maru] ✓ ファイルドラッグ&ドロップを有効化しました");
+    console.log("[Maru] ファイルドラッグ&ドロップを有効化しました");
   }
 
   function cleanupDropUploader() {
@@ -1024,7 +1045,8 @@
     window.removeEventListener("dragleave", onDropDragLeave, true);
     window.removeEventListener("drop", onDropFile, true);
 
-    document.getElementById(DROP_UPLOADER_ID)?.remove();
+    const overlay = document.getElementById(DROP_UPLOADER_ID);
+    if (overlay) overlay.remove();
 
     dropDragDepth = 0;
     delete window.__MARU_ADDONS_DROP_UPLOADER__;

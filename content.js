@@ -1,5 +1,5 @@
 (() => {
-  const MARU_ADDONS_VERSION = "1.4.5";
+  const MARU_ADDONS_VERSION = "1.5.0";
 
   if (window.__MARU_ADDONS_LOADED__) {
     console.log("[Maru] まる Addons はすでに読み込まれています");
@@ -790,6 +790,246 @@
     );
   }
 
+
+  // =========================
+  // Scratch ファイルドラッグ&ドロップ
+  // =========================
+  const DROP_UPLOADER_ID = "maru-addons-drop-overlay";
+  let dropDragDepth = 0;
+
+  function isSpriteFile(file) {
+    return /\\.sprite3$/i.test(file.name);
+  }
+
+  function isCostumeFile(file) {
+    return (
+      /^image\\/(png|jpeg|jpg|gif|svg\\+xml|webp|bmp)$/i.test(file.type) ||
+      /\\.(png|jpe?g|gif|svg|webp|bmp)$/i.test(file.name)
+    );
+  }
+
+  function makeFileList(file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    return dt.files;
+  }
+
+  function getFileInputs() {
+    return [...document.querySelectorAll('input[type="file"]')];
+  }
+
+  function findSpriteInput() {
+    const inputs = getFileInputs();
+
+    let input = inputs.find(i => /sprite3/i.test(i.accept || ""));
+    if (input) return input;
+
+    input = inputs.find(i => /(zip|scratch)/i.test(i.accept || ""));
+    return input || null;
+  }
+
+  function findCostumeInput() {
+    const inputs = getFileInputs();
+
+    let input = inputs.find(i =>
+      /image|png|jpe?g|gif|svg|webp|bmp/i.test(i.accept || "")
+    );
+    if (input) return input;
+
+    input = inputs.find(i => {
+      const accept = i.accept || "";
+      return accept === "" && i.multiple === false;
+    });
+
+    return input || null;
+  }
+
+  function injectDropFile(input, file) {
+    if (!input) {
+      throw new Error("Scratchのファイル入力欄が見つかりません。");
+    }
+
+    const setter = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      "files"
+    )?.set;
+
+    if (!setter) {
+      throw new Error("ブラウザが input.files の設定に対応していません。");
+    }
+
+    setter.call(input, makeFileList(file));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  async function waitForDropInput(type, timeout = 1500) {
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < timeout) {
+      const input =
+        type === "sprite" ? findSpriteInput() : findCostumeInput();
+
+      if (input) return input;
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    return null;
+  }
+
+  async function handleDroppedFiles(files) {
+    for (const file of files) {
+      try {
+        if (isSpriteFile(file)) {
+          console.log("[Maru] 🧩 Sprite3検出:", file.name);
+
+          let input = findSpriteInput();
+          if (!input) input = await waitForDropInput("sprite");
+
+          if (!input) {
+            console.error("[Maru] スプライト用のファイル入力欄が見つかりませんでした。", file);
+            continue;
+          }
+
+          injectDropFile(input, file);
+          console.log("[Maru] ✓ スプライトをScratchへ渡しました:", file.name);
+        } else if (isCostumeFile(file)) {
+          console.log("[Maru] 🖼️ コスチューム検出:", file.name);
+
+          let input = findCostumeInput();
+          if (!input) input = await waitForDropInput("costume");
+
+          if (!input) {
+            console.error("[Maru] コスチューム用のファイル入力欄が見つかりませんでした。", file);
+            continue;
+          }
+
+          injectDropFile(input, file);
+          console.log("[Maru] ✓ コスチュームをScratchへ渡しました:", file.name);
+        } else {
+          console.warn("[Maru] ⚠️ 対応していないファイルです:", file.name, file.type);
+        }
+      } catch (error) {
+        console.error("[Maru] ☓ ドロップ処理エラー:", error);
+      }
+    }
+  }
+
+  function getDropOverlay() {
+    let overlay = document.getElementById(DROP_UPLOADER_ID);
+    if (overlay) return overlay;
+
+    overlay = document.createElement("div");
+    overlay.id = DROP_UPLOADER_ID;
+    overlay.textContent =
+      "📁 ファイルをここにドロップ\\n\\n画像 → コスチューム\\n.sprite3 → スプライト";
+
+    Object.assign(overlay.style, {
+      position: "fixed",
+      inset: "20px",
+      zIndex: "2147483647",
+      display: "none",
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center",
+      whiteSpace: "pre-line",
+      fontSize: "28px",
+      fontWeight: "700",
+      color: "#fff",
+      background: "rgba(0,0,0,.55)",
+      border: "4px dashed rgba(255,255,255,.8)",
+      borderRadius: "20px",
+      backdropFilter: "blur(6px)",
+      pointerEvents: "none"
+    });
+
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function showDropOverlay() {
+    const overlay = getDropOverlay();
+    overlay.style.display = "flex";
+  }
+
+  function hideDropOverlay() {
+    const overlay = document.getElementById(DROP_UPLOADER_ID);
+    if (overlay) overlay.style.display = "none";
+  }
+
+  function onDropDragEnter(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    dropDragDepth++;
+    showDropOverlay();
+  }
+
+  function onDropDragOver(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = "copy";
+    }
+
+    showDropOverlay();
+  }
+
+  function onDropDragLeave(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    dropDragDepth--;
+
+    if (dropDragDepth <= 0) {
+      dropDragDepth = 0;
+      hideDropOverlay();
+    }
+  }
+
+  async function onDropFile(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    dropDragDepth = 0;
+    hideDropOverlay();
+
+    const files = [...(event.dataTransfer?.files || [])];
+
+    if (!files.length) {
+      console.warn("[Maru] ⚠️ ドロップされたファイルを取得できませんでした。");
+      return;
+    }
+
+    await handleDroppedFiles(files);
+  }
+
+  function setupDropUploader() {
+    getDropOverlay();
+
+    if (window.__MARU_ADDONS_DROP_UPLOADER__) return;
+
+    window.addEventListener("dragenter", onDropDragEnter, true);
+    window.addEventListener("dragover", onDropDragOver, true);
+    window.addEventListener("dragleave", onDropDragLeave, true);
+    window.addEventListener("drop", onDropFile, true);
+
+    window.__MARU_ADDONS_DROP_UPLOADER__ = true;
+
+    console.log("[Maru] ✓ ファイルドラッグ&ドロップを有効化しました");
+  }
+
+  function cleanupDropUploader() {
+    window.removeEventListener("dragenter", onDropDragEnter, true);
+    window.removeEventListener("dragover", onDropDragOver, true);
+    window.removeEventListener("dragleave", onDropDragLeave, true);
+    window.removeEventListener("drop", onDropFile, true);
+
+    document.getElementById(DROP_UPLOADER_ID)?.remove();
+
+    dropDragDepth = 0;
+    delete window.__MARU_ADDONS_DROP_UPLOADER__;
+  }
+
   function setupAllUI() {
     injectStyle();
 
@@ -801,6 +1041,7 @@
     createPanel();
     setup60FPSButton();
     setupUnshareButton();
+    setupDropUploader();
 
     if (vm) {
       setupScratchFPS();
@@ -843,6 +1084,8 @@
       document
         .getElementById(SIXTY_STATUS_ID)
         ?.remove();
+
+      cleanupDropUploader();
 
       window.__MARU_ADDONS_LOADED__ =
         false;

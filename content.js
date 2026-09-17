@@ -2,7 +2,7 @@
   const MARU_ADDONS_VERSION = "1.5.1";
 
   if (window.__MARU_ADDONS_LOADED__) {
-    console.log("[Maru] まる Addons はすでに読み込まれています");
+    console.log("[Maru] maru Addons はすでに読み込まれています");
     return;
   }
 
